@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "types.h": "c",
+        "cpu.h": "c",
+        "cstddef": "c",
+        "sdl.h": "c"
+    }
+}
