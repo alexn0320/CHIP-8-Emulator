@@ -1,13 +1,13 @@
-CC = g++
+CC = gcc
+SDL2_CONFIG = `sdl2-config --cflags --libs`
 FLAGS = -Wall -g
-LD = -lsfml-graphics -lsfml-window -lsfml-system
-SRCS = $(wildcard *.cpp)
-OBJS = $(patsubst %.cpp, %.o, $(SRCS))
+SRCS = $(wildcard *.c)
+OBJS = $(patsubst %.c, %.o, $(SRCS))
 
 all: app
 
 app: $(OBJS)
-	$(CC) $(OBJS) -o $@ $(LD)
+	$(CC) $(OBJS) -o $@ $(SDL2_CONFIG)
 
 %.o: %.cpp
 	$(CC) -c $< -o $@
