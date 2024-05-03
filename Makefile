@@ -4,9 +4,9 @@ FLAGS = -Wall -g
 SRCS = $(wildcard *.c)
 OBJS = $(patsubst %.c, %.o, $(SRCS))
 
-all: app
+all: chip8
 
-app: $(OBJS)
+chip8: $(OBJS)
 	$(CC) $(OBJS) -o $@ $(SDL2_CONFIG)
 
 %.o: %.cpp

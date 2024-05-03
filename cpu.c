@@ -2,11 +2,14 @@
 #include "display.h"
 #include <stdio.h>
 
-void loader(cpu *c, const char* path)
+BYTE loader(cpu *c, const char* path)
 {
     FILE *rom = fopen(path, "rb");
     char b;
     uint32_t size = 0;
+
+    if(rom == NULL)
+        return 0;
 
     //get the size in bytes of the file
     fseek(rom, 0, SEEK_END);
@@ -21,6 +24,7 @@ void loader(cpu *c, const char* path)
     }
 
     fclose(rom);
+    return 1;
 }
 
 void init_cpu(cpu *c)
@@ -149,7 +153,7 @@ void cycle(cpu *c)
     }
 }
 
-void run()
+void run(const char* prog)
 {
     cpu chip8;
 
@@ -158,7 +162,11 @@ void run()
     chip8.running = 1;
 
     //load the IBM logo into memory
-    loader(&chip8, "./ROM/IBM_Logo.ch8");
+    if(!loader(&chip8, prog))
+    {
+        printf("Failed to load program\n");
+        return;
+    }
 
     //main loop
     while(chip8.running)
@@ -174,15 +182,34 @@ void run()
     disp_close(&chip8.d);
 }
 
-void print_cpu(cpu c)
+void print_cpu(const cpu c)
 {
     printf("----------\n");
     printf("REGISTERS:\n");
     printf("----------\n");
 
-    for(uint8_t i = 0; i < 16; i++)
+    for(BYTE i = 0; i < 16; i++)
         printf("V%d: %02x\n", i, c.V[i]);
 
     printf("PC: %02x\nI: %02x\nSP: %02x\nD_TIMER: %02x\nS_TIMER: %02x\n", c.PC, c.I, c.SP, c.DELAY_TIMER, c.SOUND_TIMER);
     printf("----------\n");
+}
+
+void hexdump(cpu c)
+{
+    printf("-------\n");
+    printf("MEMORY:\n");
+    printf("-------\n");
+
+    //printing 10 bytes per row
+    for(uint32_t i = 0; i < MEM_SIZE; i++)
+    {
+        if(i > 0 && i % 10 == 0)
+            printf("\n");
+
+        if(i == 0 || i % 10 == 0)
+            printf("0x%03x: ", i);
+
+        printf("%02x ", c.memory[i]);
+    }
 }

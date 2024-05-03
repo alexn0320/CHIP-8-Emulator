@@ -59,14 +59,15 @@ typedef struct
 } cpu;
 
 //load a program in memory
-void loader(cpu *c, const char* path);
+BYTE loader(cpu *c, const char* path);
 // init CPU values
 void init_cpu(cpu *c);
 // fetch/decode/execute
 void cycle(cpu *c);
 //main loop
-void run();
+void run(const char* prog);
 // debug registers
-void print_cpu(cpu c);
+void print_cpu(const cpu c);
+void hexdump(const cpu c);
 
 #endif
