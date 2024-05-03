@@ -1,7 +1,7 @@
 # CHIP-8 Emulator
 - The classic CHIP-8 emulator, made to learn how emulators and CPUs work.
 - Written in C and SDL for graphics (made in Linux).
-- Can load programs in memory from ROM files logo ROM). 
+- Can load programs in memory from ROM files. 
 
 ![image info](./assets/chip8.png)
 ### Still work in progress (can only run the IBM
