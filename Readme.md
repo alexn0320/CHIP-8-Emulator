@@ -4,7 +4,7 @@
 - Can load programs in memory from ROM files. 
 
 ![image info](./assets/chip8.png)
-### Still work in progress (can only run the IBM
+### Still work in progress (can only run the IBM logo)
 
 # Installation and running
 
