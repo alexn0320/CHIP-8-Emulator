@@ -56,6 +56,7 @@ typedef struct
 
   disp d;                   //display and auxiliary flags
   BYTE running;
+  BYTE draw_flag;
 } cpu;
 
 //load a program in memory

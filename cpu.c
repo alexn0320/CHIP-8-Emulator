@@ -1,5 +1,6 @@
 #include "cpu.h"
 #include "display.h"
+#include <SDL2/SDL_video.h>
 #include <stdio.h>
 
 BYTE loader(cpu *c, const char* path)
@@ -44,7 +45,9 @@ void init_cpu(cpu *c)
         c->V[i] = 0;
 
     //TODO: font init
-    //TODO: display init
+
+    init_disp(&c->d);
+    c->running = 1;
 }
 
 
@@ -141,8 +144,10 @@ void cycle(cpu *c)
             #ifdef DEBUG
                 printf("DXYN: %01x %01x %01x\n", X(opcode), Y(opcode), N(opcode));
             #endif
-            break;
 
+            c->draw_flag = 1;
+
+            break;
         }
 
         //Clear screen
@@ -156,12 +161,9 @@ void cycle(cpu *c)
 void run(const char* prog)
 {
     cpu chip8;
-
     init_cpu(&chip8);
-    init_disp(&chip8.d);
-    chip8.running = 1;
 
-    //load the IBM logo into memory
+    //load the a ROM file in memory
     if(!loader(&chip8, prog))
     {
         printf("Failed to load program\n");
@@ -176,7 +178,13 @@ void run(const char* prog)
 
         //get screen events and render map
         disp_events(&chip8.running);
-        render(&chip8.d);
+
+        //render screen
+        if(chip8.draw_flag)
+        {
+            render(&chip8.d);
+            chip8.draw_flag = 0;
+        }
     }
 
     disp_close(&chip8.d);
