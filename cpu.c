@@ -160,6 +160,8 @@ void cycle(cpu *c)
 
 void run(const char* prog)
 {
+    //TODO timers
+
     cpu chip8;
     init_cpu(&chip8);
 

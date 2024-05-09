@@ -9,9 +9,9 @@ all: chip8
 chip8: $(OBJS)
 	$(CC) $(OBJS) -o $@ $(SDL2_CONFIG)
 
-%.o: %.cpp
+%.o: %.c
 	$(CC) -c $< -o $@
 
 clean:
 	rm -rf ./*.o
-	rm -rf ./app
+	rm -rf ./chip8
