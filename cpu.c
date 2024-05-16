@@ -1,7 +1,43 @@
 #include "cpu.h"
 #include "display.h"
-#include <SDL2/SDL_video.h>
 #include <stdio.h>
+#include <time.h>
+
+static void sleep(int milliseconds)
+{
+    struct timespec time;
+
+    time.tv_sec = milliseconds / 1000;
+    time.tv_nsec = milliseconds * 1000000;
+
+    nanosleep(&time, &time);
+}
+
+void push(cpu *c, WORD val)
+{
+    c->stack[c->SP++] = val;
+}
+
+void pop(cpu *c)
+{
+    if(c->SP > 0)
+    {
+        c->stack[c->SP] = 0x0000;
+        c->SP--;
+    }
+}
+
+void print_stack(cpu c)
+{
+    printf("------\n");
+    printf("STACK:\n");
+    printf("------\n");
+
+    for(BYTE i = 0; i < c.SP; i++)
+        printf("%02x\n", c.stack[i]);
+
+    printf("------\n");
+}
 
 BYTE loader(cpu *c, const char* path)
 {
@@ -28,7 +64,7 @@ BYTE loader(cpu *c, const char* path)
     return 1;
 }
 
-void init_cpu(cpu *c)
+void init_cpu(cpu *c, BYTE debug)
 {
     //initialising memory
     memset(c->memory, 0, MEM_SIZE);
@@ -46,7 +82,10 @@ void init_cpu(cpu *c)
 
     //TODO: font init
 
-    init_disp(&c->d);
+    //if debug mode, do not open screen
+    if(!debug)
+        init_disp(&c->d);
+
     c->running = 1;
 }
 
@@ -55,9 +94,9 @@ void cycle(cpu *c)
 {
     //fetch
     WORD opcode = READ_OPCODE(c->memory[c->PC], c->memory[c->PC + 1]);
-    c->PC += 2;
     //decode (macros are also used)
     WORD flag = opcode & 0xF000;
+    c->PC += 2;
 
     //debug section
     #ifdef DEBUG
@@ -154,16 +193,41 @@ void cycle(cpu *c)
         case 0x00E0:
             for(uint32_t i = 0; i < DISP_WIDTH * DISP_HEIGHT; i++)
                 c->d.gfx[i] = 0;
-        break;
+            break;
+
+        //call subroutine
+        case 0x2000:
+            push(c, c->PC);
+            c->PC = NNN(opcode);
+
+            #ifdef DEBUG
+                printf("2NNN: %03x\n", NNN(opcode));
+            #endif
+
+            break;
+
+        //return from subroutine
+        case 0x0000:
+            if(opcode != 0x00EE)
+                return;
+
+            c->PC = c->stack[c->SP - 1];
+            pop(c);
+
+            #ifdef DEBUG
+                printf("00EE %03x\n", c->PC);
+            #endif
+
+            break;
     }
 }
 
-void run(const char* prog)
+void run(const char* prog, BYTE debug)
 {
     //TODO timers
 
     cpu chip8;
-    init_cpu(&chip8);
+    init_cpu(&chip8, debug);
 
     //load the a ROM file in memory
     if(!loader(&chip8, prog))
@@ -172,21 +236,65 @@ void run(const char* prog)
         return;
     }
 
+    //debug
+    if(debug == 1)
+    {
+        char comm[128];
+
+        printf("DEBUG MODE\n");
+
+        while(1)
+        {
+            scanf("%s", comm);
+            printf("\n");
+
+            if(!strcmp(comm, "cycle"))
+                cycle(&chip8);
+            else if(!strcmp(comm, "cpu"))
+                print_cpu(chip8);
+            else if(!strcmp(comm, "memory"))
+                hexdump(chip8);
+            else if(!strcmp(comm, "exit"))
+                break;
+        }
+
+        return;
+    }
+
+    BYTE instructions = 0;
+
     //main loop
     while(chip8.running)
     {
         //fetch/decode/execute instruction
         cycle(&chip8);
 
-        //get screen events and render map
+        //get input
         disp_events(&chip8.running);
 
         //render screen
         if(chip8.draw_flag)
         {
-            render(&chip8.d);
+            //render(&chip8.d);
             chip8.draw_flag = 0;
         }
+
+        //540Hz / 9 = 60Hz frequency for the timers
+        if(instructions == 9)
+        {
+            if(chip8.DELAY_TIMER > 0)
+                chip8.DELAY_TIMER--;
+
+            if(chip8.SOUND_TIMER > 0)
+                chip8.SOUND_TIMER--;
+
+            instructions = 0;
+        }
+        else
+            instructions++;
+
+        //1850 milliseconds ~ 540Hz frequency for the CPU
+        sleep(1850);
     }
 
     disp_close(&chip8.d);
@@ -222,4 +330,6 @@ void hexdump(cpu c)
 
         printf("%02x ", c.memory[i]);
     }
+
+    printf("-------\n");
 }

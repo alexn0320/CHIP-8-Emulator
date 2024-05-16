@@ -6,12 +6,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <SDL2/SDL_video.h>
+#include <stdio.h>
+#include <time.h>
 
 /*
  *   The header and source files that implement the characteristics of the
  * CHIP-8 CPU.
  */
 
+#define DEBUG 1
+#define MEM_DEBUG 1
 // RAM size (4KB)
 #define MEM_SIZE 4096
 // stack size (should be abode 16)
@@ -59,14 +64,18 @@ typedef struct
   BYTE draw_flag;
 } cpu;
 
+//stack related functions
+void push(cpu *c, WORD val);
+void pop(cpu *c);
+void print_stack(cpu c);
 //load a program in memory
 BYTE loader(cpu *c, const char* path);
 // init CPU values
-void init_cpu(cpu *c);
+void init_cpu(cpu *c, BYTE debug);
 // fetch/decode/execute
 void cycle(cpu *c);
 //main loop
-void run(const char* prog);
+void run(const char* prog, BYTE debug);
 // debug registers
 void print_cpu(const cpu c);
 void hexdump(const cpu c);
