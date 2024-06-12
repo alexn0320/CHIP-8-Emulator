@@ -100,7 +100,7 @@ void cycle(cpu *c)
 
     //debug section
     #ifdef DEBUG
-        printf("%04x %04x\n", opcode, flag);
+        printf("%04x\n", opcode);
     #endif
 
     //execute
@@ -189,12 +189,6 @@ void cycle(cpu *c)
             break;
         }
 
-        //Clear screen
-        case 0x00E0:
-            for(uint32_t i = 0; i < DISP_WIDTH * DISP_HEIGHT; i++)
-                c->d.gfx[i] = 0;
-            break;
-
         //call subroutine
         case 0x2000:
             push(c, c->PC);
@@ -208,7 +202,16 @@ void cycle(cpu *c)
 
         //return from subroutine
         case 0x0000:
-            if(opcode != 0x00EE)
+
+            //Clear screen
+            if((Y(opcode)) == 0xE && (N(opcode)) == 0x0)
+            {
+                for(uint32_t i = 0; i < DISP_WIDTH * DISP_HEIGHT; i++)
+                    c->d.gfx[i] = 0;
+
+                return;
+            }
+            else if((Y(opcode)) == 0xE && (N(opcode)) == 0xE)
                 return;
 
             c->PC = c->stack[c->SP - 1];
@@ -216,6 +219,46 @@ void cycle(cpu *c)
 
             #ifdef DEBUG
                 printf("00EE %03x\n", c->PC);
+            #endif
+
+            break;
+
+        case 0x3000:
+            if(c->V[X(opcode)] == (NN(opcode)))
+                c->PC += 2;
+
+            #ifdef DEBUG
+                printf("3XNN %03x %03x\n", X(opcode), NN(opcode));
+            #endif
+
+            break;
+
+        case 0x4000:
+            if(c->V[X(opcode)] != (NN(opcode)))
+                c->PC += 2;
+
+            #ifdef DEBUG
+                printf("4XNN %03x %03x\n", X(opcode), NN(opcode));
+            #endif
+
+            break;
+
+        case 0x5000:
+            if(c->V[X(opcode)] == c->V[Y(opcode)])
+                c->PC += 2;
+
+            #ifdef DEBUG
+                printf("5XY0 %03x %03x\n", X(opcode), Y(opcode));
+            #endif
+
+            break;
+
+        case 0x9000:
+            if(c->V[X(opcode)] != c->V[Y(opcode)])
+                c->PC += 2;
+
+            #ifdef DEBUG
+                printf("9XY0 %03x %03x\n", X(opcode), Y(opcode));
             #endif
 
             break;
@@ -275,7 +318,7 @@ void run(const char* prog, BYTE debug)
         //render screen
         if(chip8.draw_flag)
         {
-            //render(&chip8.d);
+            render(&chip8.d);
             chip8.draw_flag = 0;
         }
 
