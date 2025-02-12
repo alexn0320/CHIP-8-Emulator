@@ -200,10 +200,10 @@ void cycle(cpu *c)
 
             break;
 
-        //return from subroutine
+        //multiple opcodes that start with 0
         case 0x0000:
 
-            //Clear screen
+            //Clear screen (00E0)
             if((Y(opcode)) == 0xE && (N(opcode)) == 0x0)
             {
                 for(uint32_t i = 0; i < DISP_WIDTH * DISP_HEIGHT; i++)
@@ -214,6 +214,7 @@ void cycle(cpu *c)
             else if((Y(opcode)) == 0xE && (N(opcode)) == 0xE)
                 return;
 
+            //return from subroutine (00EE)
             c->PC = c->stack[c->SP - 1];
             pop(c);
 
@@ -223,6 +224,7 @@ void cycle(cpu *c)
 
             break;
 
+        //Skip next instruction if VX = NN.
         case 0x3000:
             if(c->V[X(opcode)] == (NN(opcode)))
                 c->PC += 2;
@@ -233,6 +235,7 @@ void cycle(cpu *c)
 
             break;
 
+        //Skip next instruction if VX != NN.
         case 0x4000:
             if(c->V[X(opcode)] != (NN(opcode)))
                 c->PC += 2;
@@ -243,6 +246,7 @@ void cycle(cpu *c)
 
             break;
 
+        ////Skip next instruction if VX = VY.
         case 0x5000:
             if(c->V[X(opcode)] == c->V[Y(opcode)])
                 c->PC += 2;
@@ -253,6 +257,7 @@ void cycle(cpu *c)
 
             break;
 
+        //Skip next instruction if VX != VY.
         case 0x9000:
             if(c->V[X(opcode)] != c->V[Y(opcode)])
                 c->PC += 2;
@@ -262,13 +267,22 @@ void cycle(cpu *c)
             #endif
 
             break;
+
+        case 0x8000:
+            if(N(opcode) == 0x0)
+                c->V[X(opcode)] = c->V[Y(opcode)];
+
+            #ifdef DEBUG
+                printf("8XY0 %03x %03x\n", X(opcode), Y(opcode));
+            #endif
+
+            break;
     }
 }
 
 void run(const char* prog, BYTE debug)
 {
     //TODO timers
-
     cpu chip8;
     init_cpu(&chip8, debug);
 
