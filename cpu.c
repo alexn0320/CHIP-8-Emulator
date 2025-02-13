@@ -269,11 +269,11 @@ void cycle(cpu *c)
             break;
 
         case 0x8000:
-            if(N(opcode) == 0x0)
+            if((N(opcode)) == 0x0)
                 c->V[X(opcode)] = c->V[Y(opcode)];
 
             #ifdef DEBUG
-                printf("8XY0 %03x %03x\n", X(opcode), Y(opcode));
+                printf("8XY0 %02x %02x\n", X(opcode), Y(opcode));
             #endif
 
             break;
