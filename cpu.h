@@ -15,7 +15,6 @@
  * CHIP-8 CPU.
  */
 
-#define DEBUG 1
 #define MEM_DEBUG 1
 // RAM size (4KB)
 #define MEM_SIZE 4096

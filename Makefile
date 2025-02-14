@@ -15,3 +15,7 @@ chip8: $(OBJS)
 clean:
 	rm -rf ./*.o
 	rm -rf ./chip8
+
+exec:
+	rm ./ROM/output
+	python ./ROM/ROM_loader.py ./ROM/input ./ROM/output

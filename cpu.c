@@ -268,13 +268,134 @@ void cycle(cpu *c)
 
             break;
 
+        //operations on two registers
         case 0x8000:
+            //Vx = Vy
             if((N(opcode)) == 0x0)
+            {
                 c->V[X(opcode)] = c->V[Y(opcode)];
 
+                #ifdef DEBUG
+                    printf("8XY0 %02x %02x\n", X(opcode), Y(opcode));
+                #endif
+            }
+
+            //Vx OR Vy
+            if((N(opcode)) == 0x1)
+            {
+                c->V[X(opcode)] = c->V[X(opcode)] | c->V[Y(opcode)];
+
+                #ifdef DEBUG
+                    printf("8XY1 %02x %02x\n", X(opcode), Y(opcode));
+                #endif
+            }
+
+            //Vx AND Vy
+            if((N(opcode)) == 0x2)
+            {
+                c->V[X(opcode)] = c->V[X(opcode)] & c->V[Y(opcode)];
+
+                #ifdef DEBUG
+                    printf("8XY2 %02x %02x\n", X(opcode), Y(opcode));
+                #endif
+            }
+
+            //Vx XOR Vy
+            if((N(opcode)) == 0x3)
+            {
+                c->V[X(opcode)] = c->V[X(opcode)] ^ c->V[Y(opcode)];
+
+                #ifdef DEBUG
+                    printf("8XY3 %02x %02x\n", X(opcode), Y(opcode));
+                #endif
+            }
+
+            //Vx = Vx + Vy, VF = carry
+            if((N(opcode)) == 0x4)
+            {
+                WORD aux = (WORD) c->V[X(opcode)] + (WORD) c->V[Y(opcode)];
+                c->V[X(opcode)] = aux & 0x00FF;
+
+                if(aux > 255)
+                    c->V[0xF] |= 1;
+                else
+                    c->V[0xF] &= 0;
+
+                #ifdef DEBUG
+                    printf("8XY4 %02x %02x\n", X(opcode), Y(opcode));
+                #endif
+            }
+
+            //Vx = Vx - Vy, Vf = NOT carry
+            if((N(opcode)) == 0x5)
+            {
+                if(c->V[X(opcode)] > c->V[Y(opcode)])
+                    c->V[0xF] |= 1;
+                else
+                    c->V[0xF] &= 0;
+
+                c->V[X(opcode)] = c->V[X(opcode)] - c->V[Y(opcode)];
+
+                #ifdef DEBUG
+                    printf("8XY5 %02x %02x\n", X(opcode), Y(opcode));
+                #endif
+            }
+
+            //Vx = Vx >> 1
+            if((N(opcode)) == 0x6)
+            {
+                if(c->V[X(opcode)] & 1)
+                    c->V[0xF] |= 1;
+                else
+                    c->V[0xF] &= 0;
+
+                c->V[X(opcode)] = c->V[X(opcode)] / 2;
+
+                #ifdef DEBUG
+                    printf("8XY6 %02x %02x\n", X(opcode), Y(opcode));
+                #endif
+            }
+
+            //Vx = Vy - Vx, VF = NOT carry
+            if((N(opcode)) == 0x7)
+            {
+                if(c->V[Y(opcode)] > c->V[X(opcode)])
+                    c->V[0xF] |= 1;
+                else
+                    c->V[0xF] &= 0;
+
+                c->V[X(opcode)] = c->V[Y(opcode)] - c->V[X(opcode)];
+
+                #ifdef DEBUG
+                    printf("8XY7 %02x %02x\n", X(opcode), Y(opcode));
+                #endif
+            }
+
+            //Vx = Vx << 1
+            if((N(opcode)) == 0xE)
+            {
+                if(c->V[X(opcode)] & 0x80)
+                    c->V[0xF] |= 1;
+                else
+                    c->V[0xF] &= 0;
+
+                c->V[X(opcode)] = c->V[X(opcode)] * 2;
+
+                #ifdef DEBUG
+                    printf("8XYE %02x %02x\n", X(opcode), Y(opcode));
+                #endif
+            }
+
+            break;
+
+        //jump to nnn + V0
+        case 0xB000:
+            c->PC = (NNN(opcode)) + c->V[0x0];
+
             #ifdef DEBUG
-                printf("8XY0 %02x %02x\n", X(opcode), Y(opcode));
+                printf("BNNN %03x\n", NNN(opcode));
             #endif
+            int x;
 
             break;
     }
