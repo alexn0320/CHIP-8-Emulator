@@ -15,6 +15,7 @@
  * CHIP-8 CPU.
  */
 
+#define DEBUG 1
 #define MEM_DEBUG 1
 // RAM size (4KB)
 #define MEM_SIZE 4096
@@ -75,7 +76,7 @@ void init_cpu(cpu *c, BYTE debug);
 void cycle(cpu *c);
 //main loop
 void run(const char* prog, BYTE debug);
-// debug registers
+// debug (registers and memory)
 void print_cpu(const cpu c);
 void hexdump(const cpu c);
 

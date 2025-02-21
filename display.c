@@ -78,6 +78,9 @@ static BYTE get_keycode(SDL_KeyboardEvent event)
 
 BYTE init_disp(disp *d)
 {
+    //if no key is pressed, keep a value that is not a keycode
+    d->key_pressed = 0xFF;
+
     //initialise SDL
     if(SDL_Init(SDL_INIT_VIDEO) == -1)
     {
@@ -123,7 +126,7 @@ BYTE init_disp(disp *d)
     return 1;
 }
 
-void disp_events(BYTE *running)
+void disp_events(BYTE *running, BYTE *key)
 {
     SDL_Event event;
 
@@ -138,7 +141,7 @@ void disp_events(BYTE *running)
 
         if(event.type == SDL_KEYDOWN)
         {
-            printf("%d\n", get_keycode(event.key));
+            *key = get_keycode(event.key);
         }
     }
 }

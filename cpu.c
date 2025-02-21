@@ -80,7 +80,9 @@ void init_cpu(cpu *c, BYTE debug)
     for(uint8_t i = 0; i < 16; i++)
         c->V[i] = 0;
 
-    //TODO: font init
+    //loading the font into the memory
+    for(BYTE i = 0; i < 16 * 5; i++)
+        c->memory[FONT_START_ADDR + i] = font[i];
 
     //if debug mode, do not open screen
     if(!debug)
@@ -92,16 +94,13 @@ void init_cpu(cpu *c, BYTE debug)
 
 void cycle(cpu *c)
 {
+    srand(time(0));
+
     //fetch
     WORD opcode = READ_OPCODE(c->memory[c->PC], c->memory[c->PC + 1]);
     //decode (macros are also used)
     WORD flag = opcode & 0xF000;
     c->PC += 2;
-
-    //debug section
-    #ifdef DEBUG
-        printf("%04x\n", opcode);
-    #endif
 
     //execute
     switch (flag)
@@ -395,7 +394,89 @@ void cycle(cpu *c)
             #ifdef DEBUG
                 printf("BNNN %03x\n", NNN(opcode));
             #endif
-            int x;
+
+            break;
+
+        //Vx = random AND NN
+        case 0xC000:
+            BYTE val = (BYTE) rand();
+            c->V[X(opcode)] = val & (NN(opcode));
+
+            #ifdef DEBUG
+                printf("CXNN %01x %02x\n", X(opcode), NN(opcode));
+            #endif
+
+            break;
+
+        //keyboard input opcodes (skip if key is/is not pressed)
+        case 0xE000:
+            if((NN(opcode)) == 0x9E)
+                if(c->d.key_pressed == (X(opcode)))
+                    c->PC += 2;
+
+            if((NN(opcode)) == 0xA1)
+                if(c->d.key_pressed != (X(opcode)))
+                    c->PC += 2;
+
+            break;
+
+        case 0xF000:
+            //Vx = sound timer
+            if((NN(opcode)) == 0x07)
+                c->V[X(opcode)] =c->DELAY_TIMER;
+
+            //pause emulator until a key is pressed
+            if((NN(opcode)) == 0x0A)
+            {
+                BYTE copy;
+
+                while(1)
+                {
+                    if(c->d.key_pressed != 0xFF)
+                    {
+                        copy = c->d.key_pressed;
+                        break;
+                    }
+                }
+
+                c->V[X(opcode)] = c->d.key_pressed;
+            }
+
+            //delay timer = Vx
+            if((NN(opcode)) == 0x15)
+                c->DELAY_TIMER =c->V[X(opcode)];
+
+            //sound timer = Vx
+            if((NN(opcode)) == 0x18)
+                c->SOUND_TIMER =c->V[X(opcode)];
+
+            //I = I + Vx
+            if((NN(opcode)) == 0x1E)
+                c->I += c->V[X(opcode)];
+
+            //loads the location in memory of character X
+            if((NN(opcode)) == 0x29)
+                c->I = FONT_START_ADDR + 5 * (X(opcode));
+
+            //stores BCD representation in memory
+            if((NN(opcode)) == 0x33)
+            {
+                c->memory[c->I] = c->V[X(opcode)] / 100;
+                c->memory[c->I + 1] = c->V[X(opcode)] / 10 % 10;
+                c->memory[c->I + 2] = c->V[X(opcode)] % 10;
+            }
+
+            if((NN(opcode)) == 0x55)
+            {
+                for(BYTE i = 0; i <= (X(opcode)); i++)
+                    c->memory[c->I + i] = c->V[i];
+            }
+
+            if((NN(opcode)) == 0x65)
+            {
+                for(BYTE i = 0; i <= (X(opcode)); i++)
+                    c->V[i] = c->memory[c->I + i];
+            }
 
             break;
     }
@@ -444,11 +525,12 @@ void run(const char* prog, BYTE debug)
     //main loop
     while(chip8.running)
     {
+        chip8.d.key_pressed = 0xFF;
         //fetch/decode/execute instruction
         cycle(&chip8);
 
         //get input
-        disp_events(&chip8.running);
+        disp_events(&chip8.running, &chip8.d.key_pressed);
 
         //render screen
         if(chip8.draw_flag)
