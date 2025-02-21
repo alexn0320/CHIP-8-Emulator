@@ -10,7 +10,7 @@ Documentation for opcodes and general information: http://devernay.free.fr/hacks
 # Installation and running
 
 - You need `gcc`, `make` and `SDL2`.
-- Simply clone the repo, compile it and run the emulator using a ROM file from the `ROM` folder.
+- Simply clone the repo, compile it and run the emulator using a ROM file.
 
 ```
 git clone https://github.com/SHOREQU69/CHIP-8-Emulator
@@ -19,7 +19,7 @@ make
 ./chip8 ./ROM/IBM_Logo.ch8
 ```
 
-- To run using the debug mode (in which you can see CPU info such as register values or memory), run the
+- To run using the debug mode run the
 executable using the `-debug` flag.
 - Supported operations in debug mode:
     - `cycle`: executes a single CPU cycle.  
